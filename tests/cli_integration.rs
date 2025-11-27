@@ -10,16 +10,18 @@ fn prints_paths_for_different_dirs() -> Result<(), Box<dyn Error>> {
     let tgt = tmp.child("tgt");
     tgt.create_dir_all()?;
 
+    // verbose 플래그를 추가하여 상세 출력이 나오도록 함
     assert_cmd::cargo::cargo_bin_cmd!("filesync")
         .arg("--source")
         .arg(src.path())
         .arg("--target")
         .arg(tgt.path())
+        .arg("--verbose")
         .assert()
         .success()
         .stdout(predicate::str::contains("Source:"))
         .stdout(predicate::str::contains("Target:"))
-        .stdout(predicate::str::contains("Dry run"));
+        .stdout(predicate::str::contains("Is dry run"));
 
     tmp.close()?;
     Ok(())
@@ -38,7 +40,7 @@ fn fails_when_source_and_target_are_same() -> Result<(), Box<dyn Error>> {
         .arg(same.path())
         .assert()
         .failure()
-        .stderr(predicate::str::contains("`--source`와 `--target`은 서로 달라야 합니다."));
+        .stderr(predicate::str::contains("--source`와 `--target`이 같은 경로일 수 없습니다"));
 
     tmp.close()?;
     Ok(())
