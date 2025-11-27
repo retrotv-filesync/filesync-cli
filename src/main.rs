@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::path::{PathBuf};
+use std::path::PathBuf;
 
 mod enums;
 mod functions;
@@ -49,7 +49,7 @@ fn main() {
 
     let fl = list_entries(cli.source).expect("목록을 불러오는 중 오류 발생");
     for entry in fl {
-        println!("{} {}", entry.0.display(), entry.1.label());
+        println!("{} {}", entry.1.id(), entry.0.display());
     }
 }
 
