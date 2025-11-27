@@ -1,5 +1,6 @@
 use clap::Parser;
 use std::path::PathBuf;
+use enums::mode::Mode;
 
 mod enums;
 mod functions;
@@ -12,18 +13,23 @@ struct Cli {
     // long -> 긴 명령어 사용
     // value_name -> 값 이름 지정
 
-    // --source=<path>
+    // --source=<path> or --source <path>
     /// 원본 디렉토리
-    #[arg(long, value_name = "SOURCE")]
+    #[arg(long, value_name = "SOURCE_PATH", required = true)]
     source: PathBuf,
 
-    // --target=<path>
+    // --target=<path> or --target <path>
     /// 대상 디렉토리
-    #[arg(long, value_name = "TARGET")]
+    #[arg(long, value_name = "TARGET_PATH", required = true)]
     target: PathBuf,
 
+    // --mode=<MODE> or --mode <MODE>
+    /// 동기화 모드
+    #[arg(long, value_enum, value_name = "MODE", default_value = "mirroring")]
+    mode: Mode,
+
     // --dry-run or -d
-    /// 실제로 동작하지 않고 시뮬레이션만 수행
+    /// 동기화 시뮬레이션 실행
     #[arg(short, long)]
     dry_run: bool,
 
@@ -57,4 +63,5 @@ fn input_logging(cli: &Cli) {
     println!("Source: {}", cli.source.display());
     println!("Target: {}", cli.target.display());
     println!("Is dry run: {}", cli.dry_run);
+    println!("Mode: {}", cli.mode);
 }
