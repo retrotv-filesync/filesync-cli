@@ -1,0 +1,12 @@
+[package]
+name = "filesync"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+
+[dev-dependencies]
+assert_cmd = "2"
+assert_fs = "1"
+predicates = "3"
