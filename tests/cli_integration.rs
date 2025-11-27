@@ -19,9 +19,12 @@ fn prints_paths_for_different_dirs() -> Result<(), Box<dyn Error>> {
         .arg("--verbose")
         .assert()
         .success()
-        .stdout(predicate::str::contains("Source:"))
-        .stdout(predicate::str::contains("Target:"))
-        .stdout(predicate::str::contains("Is dry run"));
+        .stdout(predicate::str::contains("원본 경로:"))
+        .stdout(predicate::str::contains("대상 경로:"))
+        .stdout(predicate::str::contains("동기화 모드: mirroring"))
+        .stdout(predicate::str::contains("병합 모드: source"))
+        .stdout(predicate::str::contains("동기화 시뮬레이션 여부: false"))
+        ;
 
     tmp.close()?;
     Ok(())
