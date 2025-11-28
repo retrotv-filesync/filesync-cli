@@ -5,10 +5,10 @@ use enums::sync_mode::SyncMode;
 mod enums;
 mod functions;
 use functions::file_utils::list_entries;
-use crate::enums::entry_type::EntryType;
 use crate::enums::merge_mode::MergeMode;
 use crate::enums::sync_mode::SyncMode::MIRRORING;
 use crate::enums::merge_mode::MergeMode::SOURCE;
+use crate::functions::logging::{entry_logging, input_logging};
 
 #[derive(Parser)]
 #[command(author, version, about = "filesync 예제 CLI")]
@@ -71,7 +71,7 @@ fn main() {
     }
 
     // 원본 경로의 목록 불러오기
-    let fl = list_entries(cli.source, 0).unwrap_or_else(|err| {
+    let fl = list_entries(&cli.source, 0).unwrap_or_else(|err| {
         eprintln!("ERROR: 목록을 불러오는 중 오류 발생");
         eprintln!("ERROR: {}", err);
         std::process::exit(1);
@@ -79,20 +79,6 @@ fn main() {
 
     // 불러온 목록 로깅
     if cli.verbose {
-        entry_logging(&fl);
-    }
-}
-
-fn input_logging(cli: &Cli) {
-    println!("원본 경로: {}", cli.source.display());
-    println!("대상 경로: {}", cli.target.display());
-    println!("동기화 모드: {}", cli.sync_mode);
-    println!("병합 모드: {}", cli.merge_mode);
-    println!("동기화 시뮬레이션 여부: {}", cli.dry_run);
-}
-
-fn entry_logging(entries: &Vec<(PathBuf, EntryType, i32)>) {
-    for entry in entries {
-        println!("{} {} {}", entry.2, entry.1.id(), entry.0.display());
+        entry_logging(&cli.source, &fl);
     }
 }

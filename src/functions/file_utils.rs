@@ -1,22 +1,22 @@
 use std::fs::{metadata, read_dir};
-use std::io::{Error, ErrorKind};
+use std::io::{Error, ErrorKind, Result};
 use std::path::{Path, PathBuf};
 use crate::enums::entry_type::EntryType;
 use crate::enums::entry_type::EntryType::{D, F};
 
 /// 입력 경로가 디렉터리인지 확인합니다.
-pub fn is_directory<P: AsRef<Path>>(path: P) -> std::io::Result<bool> {
+pub fn is_directory<P: AsRef<Path>>(path: P) -> Result<bool> {
     metadata(path).map(|md| md.is_dir())
 }
 
 /// 입력 경로가 파일인지 확인합니다.
-pub fn is_file<P: AsRef<Path>>(path: P) -> std::io::Result<bool> {
+pub fn is_file<P: AsRef<Path>>(path: P) -> Result<bool> {
     metadata(path).map(|md| md.is_file())
 }
 
 /// 입력 경로가 파일이면 그 파일만, 디렉터리이면 디렉터리 내 항목들을 반환합니다.
 /// 에러는 호출자에게 전파됩니다.
-pub fn list_entries<P: AsRef<Path>>(path: P, depth: i32) -> std::io::Result<Vec<(PathBuf, EntryType, i32)>> {
+pub fn list_entries<P: AsRef<Path>>(path: P, depth: i32) -> Result<Vec<(PathBuf, EntryType, i32)>> {
     let p = path.as_ref();
 
     if is_file(p)? {
