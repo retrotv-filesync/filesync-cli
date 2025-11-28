@@ -5,6 +5,7 @@ use enums::sync_mode::SyncMode;
 mod enums;
 mod functions;
 use functions::file_utils::list_entries;
+use crate::enums::entry_type::EntryType;
 use crate::enums::merge_mode::MergeMode;
 use crate::enums::sync_mode::SyncMode::MIRRORING;
 use crate::enums::merge_mode::MergeMode::SOURCE;
@@ -70,7 +71,7 @@ fn main() {
     }
 
     // 원본 경로의 목록 불러오기
-    let fl = list_entries(cli.source).unwrap_or_else(|err| {
+    let fl = list_entries(cli.source, 0).unwrap_or_else(|err| {
         eprintln!("ERROR: 목록을 불러오는 중 오류 발생");
         eprintln!("ERROR: {}", err);
         std::process::exit(1);
@@ -90,8 +91,8 @@ fn input_logging(cli: &Cli) {
     println!("동기화 시뮬레이션 여부: {}", cli.dry_run);
 }
 
-fn entry_logging(entries: &Vec<(PathBuf, enums::entry_type::EntryType)>) {
+fn entry_logging(entries: &Vec<(PathBuf, EntryType, i32)>) {
     for entry in entries {
-        println!("{} {}", entry.1.id(), entry.0.display());
+        println!("{} {} {}", entry.2, entry.1.id(), entry.0.display());
     }
 }
