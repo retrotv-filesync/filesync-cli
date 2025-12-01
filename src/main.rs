@@ -83,7 +83,10 @@ fn main() {
     }
 
     // 파일 및 디렉토리 복사
-    copy_entries(&fl, &cli.source, &cli.target, cli.dry_run, cli.verbose).unwrap_or_else(|err| {
+    copy_entries(
+        &fl,
+        &cli
+    ).unwrap_or_else(|err| {
         eprintln!("ERROR: 파일 복사 중 오류 발생");
         eprintln!("ERROR: {}", err);
         std::process::exit(1);
