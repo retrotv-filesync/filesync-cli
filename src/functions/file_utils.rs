@@ -1,11 +1,11 @@
-use std::fs::{metadata, read_dir, create_dir_all, copy};
+use std::fs::{metadata, read_dir, create_dir_all};
+use fs_extra::file::{copy as fse_copy, CopyOptions};
 use std::io::{Error, ErrorKind, Result};
 use std::path::{Path, PathBuf};
 use crate::Cli;
 use crate::enums::entry_type::EntryType;
 use crate::enums::entry_type::EntryType::{D, F};
 use crate::enums::merge_mode::MergeMode;
-use crate::enums::sync_mode::SyncMode;
 
 /// 입력 경로가 디렉터리인지 확인합니다.
 pub fn is_directory<P: AsRef<Path>>(path: P) -> Result<bool> {
@@ -94,16 +94,22 @@ pub fn copy_entries(
                     }
                 }
 
-                if cli.verbose {
-                    let source_with_sep = format!("{}/", cli.source.display());
-                    let target_with_sep = format!("{}/", cli.target.display());
-                    let sp = path.display().to_string().replace(&source_with_sep, "");
-                    let tp = target_path.display().to_string().replace(&target_with_sep, "");
-                    println!("[F]: {} -> {}", sp, tp);
-                }
+                match cli.merge_mode {
+                    MergeMode::SOURCE => {
+                        source_copy(&cli, path, target_path)
+                    }
 
-                if !cli.dry_run {
-                    copy(path, &target_path)?;
+                    MergeMode::TARGET => {
+                        target_copy(&cli, path, target_path)
+                    }
+
+                    MergeMode::BIGGER => {
+                        bigger_copy(&cli, path, target_path)
+                    }
+
+                    _ => {
+                        todo!("이 병합 모드는 아직 구현되지 않았습니다: {:?}", cli.merge_mode);
+                    }
                 }
             }
         }
@@ -112,3 +118,70 @@ pub fn copy_entries(
     Ok(())
 }
 
+fn source_copy(cli: &Cli, path: &Path, target_path: PathBuf) -> () {
+    if cli.verbose {
+        println!("[F]: {} -> {}", path.display(), target_path.display());
+    }
+
+    overwrite_copy(cli, path, target_path);
+}
+
+fn target_copy(cli: &Cli, path: &Path, target_path: PathBuf) -> () {
+    if !target_path.exists() {
+        if cli.verbose {
+            println!("[F]: {} -> {} (대상 파일 없음)", path.display(), target_path.display());
+        }
+
+        overwrite_copy(cli, path, target_path);
+    } else {
+        if cli.verbose {
+            println!("[F]: {} 건너뛰기 (대상 파일 유지)", path.display());
+        }
+    }
+}
+
+fn bigger_copy(cli: &Cli, path: &Path, target_path: PathBuf) -> () {
+    if !target_path.exists() {
+        if cli.verbose {
+            println!("[F]: {} -> {} (대상 파일 없음)", path.display(), target_path.display());
+        }
+
+        overwrite_copy(cli, path, target_path);
+    } else {
+        let source_meta = metadata(path).expect("원본의 메타 데이터가 존재하지 않습니다.");
+        let target_meta = metadata(&target_path).expect("목표의 메타 데이터가 존재하지 않습니다.");
+
+        if source_meta.len() > target_meta.len() {
+            if cli.verbose {
+                println!("[F]: {} -> {} (원본이 더 큼)", path.display(), target_path.display());
+            }
+
+            overwrite_copy(cli, path, target_path);
+        } else if target_meta.len() > source_meta.len() {
+            if cli.verbose {
+                println!("[F]: {} <- {} (대상이 더 큼)", path.display(), target_path.display());
+            }
+
+            overwrite_copy(cli, path, target_path);
+        } else {
+            if cli.verbose {
+                println!("[F]: {} 건너뛰기 (크기 동일)", path.display());
+            }
+        }
+    }
+}
+
+fn overwrite_copy(cli: &Cli, path: &Path, target_path: PathBuf) -> () {
+    if cli.verbose {
+        println!("[F]: {} -> {} (덮어쓰기)", path.display(), target_path.display());
+    }
+
+    if !cli.dry_run {
+        let options = CopyOptions {
+            overwrite: true,
+            ..Default::default()
+        };
+        fse_copy(path, &target_path, &options)
+            .map_err(|e| Error::new(ErrorKind::Other, e.to_string())).expect("파일 복사 실패");
+    }
+}
