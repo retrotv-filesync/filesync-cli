@@ -4,7 +4,7 @@ use enums::sync_mode::SyncMode;
 
 mod enums;
 mod functions;
-use functions::file_utils::list_entries;
+use functions::file_utils::{list_entries, copy_entries};
 use crate::enums::merge_mode::MergeMode;
 use crate::enums::sync_mode::SyncMode::MIRRORING;
 use crate::enums::merge_mode::MergeMode::SOURCE;
@@ -17,22 +17,22 @@ struct Cli {
     // long -> 긴 명령어 사용
     // value_name -> 값 이름 지정
 
-    // --source=<path> or --source <path>
+    // --source=<SOURCE_PATH> or --source <SOURCE_PATH>
     /// 원본 디렉토리
     #[arg(long, value_name = "SOURCE_PATH", required = true)]
     source: PathBuf,
 
-    // --target=<path> or --target <path>
+    // --target=<TARGET_PATH> or --target <TARGET_PATH>
     /// 대상 디렉토리
     #[arg(long, value_name = "TARGET_PATH", required = true)]
     target: PathBuf,
 
-    // --sync-mode=<MODE> or --sync-mode <MODE>
+    // --sync-mode=<SYNC_MODE> or --sync-mode <SYNC_MODE>
     /// 동기화 모드
     #[arg(long, value_enum, value_name = "SYNC_MODE", default_value = "mirroring")]
     sync_mode: SyncMode,
 
-    // --merge-mode=<MODE> or --merge-mode <MODE>
+    // --merge-mode=<MERGE_MODE> or --merge-mode <MERGE_MODE>
     // 병합 모드
     #[arg(long, value_enum, value_name = "MERGE_MODE", default_value = "source")]
     merge_mode: MergeMode,
@@ -80,5 +80,18 @@ fn main() {
     // 불러온 목록 로깅
     if cli.verbose {
         entry_logging(&cli.source, &fl);
+    }
+
+    // 파일 및 디렉토리 복사
+    copy_entries(&fl, &cli.source, &cli.target, cli.dry_run, cli.verbose).unwrap_or_else(|err| {
+        eprintln!("ERROR: 파일 복사 중 오류 발생");
+        eprintln!("ERROR: {}", err);
+        std::process::exit(1);
+    });
+
+    if cli.dry_run {
+        println!("시뮬레이션 완료 (실제로 복사되지 않음)");
+    } else {
+        println!("파일 동기화 완료");
     }
 }
