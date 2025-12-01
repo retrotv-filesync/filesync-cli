@@ -96,15 +96,15 @@ pub fn copy_entries(
 
                 match cli.merge_mode {
                     MergeMode::SOURCE => {
-                        source_copy(&cli, path, target_path)
+                        source_copy(&cli, path, &target_path)?
                     }
 
                     MergeMode::TARGET => {
-                        target_copy(&cli, path, target_path)
+                        target_copy(&cli, path, &target_path)?
                     }
 
                     MergeMode::BIGGER => {
-                        bigger_copy(&cli, path, target_path)
+                        bigger_copy(&cli, path, &target_path)?
                     }
 
                     _ => {
@@ -118,70 +118,79 @@ pub fn copy_entries(
     Ok(())
 }
 
-fn source_copy(cli: &Cli, path: &Path, target_path: PathBuf) -> () {
+fn source_copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
+    if target_path.exists() {
+        let source_meta = metadata(path)?;
+        let target_meta = metadata(target_path)?;
+
+        // 파일 크기와 수정 시간이 같으면 동일한 파일로 간주하고 건너뜁니다.
+        if source_meta.len() == target_meta.len() && source_meta.modified()? == target_meta.modified()? {
+            if cli.verbose {
+                println!("[F]: {} 건너뛰기 (파일 동일)", path.display());
+            }
+            return Ok(());
+        }
+    }
+
     if cli.verbose {
         println!("[F]: {} -> {}", path.display(), target_path.display());
     }
 
-    overwrite_copy(cli, path, target_path);
+    overwrite_copy(cli, path, target_path)
 }
 
-fn target_copy(cli: &Cli, path: &Path, target_path: PathBuf) -> () {
+fn target_copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
     if !target_path.exists() {
         if cli.verbose {
             println!("[F]: {} -> {} (대상 파일 없음)", path.display(), target_path.display());
         }
-
-        overwrite_copy(cli, path, target_path);
+        overwrite_copy(cli, path, target_path)
     } else {
         if cli.verbose {
             println!("[F]: {} 건너뛰기 (대상 파일 유지)", path.display());
         }
+        Ok(())
     }
 }
 
-fn bigger_copy(cli: &Cli, path: &Path, target_path: PathBuf) -> () {
+fn bigger_copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
     if !target_path.exists() {
         if cli.verbose {
             println!("[F]: {} -> {} (대상 파일 없음)", path.display(), target_path.display());
         }
+        return overwrite_copy(cli, path, target_path);
+    }
 
-        overwrite_copy(cli, path, target_path);
-    } else {
-        let source_meta = metadata(path).expect("원본의 메타 데이터가 존재하지 않습니다.");
-        let target_meta = metadata(&target_path).expect("목표의 메타 데이터가 존재하지 않습니다.");
+    let source_meta = metadata(path)?;
+    let target_meta = metadata(target_path)?;
 
-        if source_meta.len() > target_meta.len() {
-            if cli.verbose {
-                println!("[F]: {} -> {} (원본이 더 큼)", path.display(), target_path.display());
-            }
-
-            overwrite_copy(cli, path, target_path);
-        } else if target_meta.len() > source_meta.len() {
-            if cli.verbose {
-                println!("[F]: {} <- {} (대상이 더 큼)", path.display(), target_path.display());
-            }
-
-            overwrite_copy(cli, path, target_path);
-        } else {
-            if cli.verbose {
-                println!("[F]: {} 건너뛰기 (크기 동일)", path.display());
-            }
+    if source_meta.len() > target_meta.len() {
+        if cli.verbose {
+            println!("[F]: {} -> {} (원본이 더 큼)", path.display(), target_path.display());
         }
+        overwrite_copy(cli, path, target_path)
+    } else if target_meta.len() > source_meta.len() {
+        if cli.verbose {
+            println!("[F]: {} <- {} (대상이 더 큼)", path.display(), target_path.display());
+        }
+        // BIGGER 모드에서는 대상이 더 크면 원본을 덮어써야 합니다.
+        overwrite_copy(cli, target_path, path)
+    } else {
+        if cli.verbose {
+            println!("[F]: {} 건너뛰기 (크기 동일)", path.display());
+        }
+        Ok(())
     }
 }
 
-fn overwrite_copy(cli: &Cli, path: &Path, target_path: PathBuf) -> () {
-    if cli.verbose {
-        println!("[F]: {} -> {} (덮어쓰기)", path.display(), target_path.display());
-    }
-
+fn overwrite_copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
     if !cli.dry_run {
         let options = CopyOptions {
             overwrite: true,
             ..Default::default()
         };
-        fse_copy(path, &target_path, &options)
-            .map_err(|e| Error::new(ErrorKind::Other, e.to_string())).expect("파일 복사 실패");
+        fse_copy(path, target_path, &options)
+            .map_err(|e| Error::new(ErrorKind::Other, e.to_string()))?;
     }
+    Ok(())
 }
