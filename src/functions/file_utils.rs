@@ -147,19 +147,41 @@ fn source_copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
 }
 
 fn target_copy(cli: &Cli, target_path: &Path, path: &Path) -> Result<()> {
-    if is_same_file(target_path, path)? {
+    // TARGET 모드에서는 target -> source 방향으로 복사합니다.
+    // 먼저, 대상 파일이 실제로 존재하는지 확인해야 합니다.
+    if !target_path.exists() {
         if cli.verbose {
-            println!("[F]: {} 건너뛰기 (대상 파일 유지)", path.display());
+            println!("[F]: {} 건너뛰기 (대상 파일 없음)", target_path.display());
         }
-    } else {
-        if cli.verbose {
-            println!("[F]: {} -> {} (대상 파일 없음)", target_path.display(), path.display());
-        }
-
-        overwrite_copy(cli, target_path, path)?
+        
+        return Ok(());
     }
 
-    Ok(())
+    // 원본 경로에 파일이 존재하는지 확인
+    if path.exists() {
+        // 원본과 대상 파일이 동일한지 확인
+        if is_same_file(target_path, path)? {
+            if cli.verbose {
+                println!("[F]: {} 건너뛰기 (파일 동일)", path.display());
+            }
+
+            Ok(())
+        } else {
+            // 다른 파일이면 대상 파일로 원본 파일을 덮어쓰기
+            if cli.verbose {
+                println!("[F]: {} <- {} 덮어쓰기", path.display(), target_path.display());
+            }
+
+            overwrite_copy(cli, target_path, path)
+        }
+    } else {
+        // 원본 파일이 존재하지 않으면 대상 파일을 원본 위치로 복사
+        if cli.verbose {
+            println!("[F]: {} <- {} 복사", path.display(), target_path.display());
+        }
+
+        overwrite_copy(cli, target_path, path)
+    }
 }
 
 fn bigger_copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
