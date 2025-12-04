@@ -337,12 +337,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
-name = "hex"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
-
-[[package]]
 name = "ignore"
 version = "0.4.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -500,12 +494,10 @@ checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
 
 [[package]]
 name = "retrotv-file"
-version = "0.0.2-alpha"
+version = "0.0.3-alpha"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a032cadbc054730600ad2a22c3e42d3d0fafe9a2145a33a824047d48931536d"
+checksum = "13c072e185438ff19e365899bac08a13342b7da239da552d390fa40c8c6d84bd"
 dependencies = [
- "fs_extra",
- "hex",
  "sha2",
 ]
 

@@ -55,15 +55,12 @@ pub fn list_entries<P: AsRef<Path>>(path: P, depth: i32) -> Result<Vec<(PathBuf,
 
 /// 원본 경로의 파일/디렉토리를 대상 경로로 복사합니다.
 /// entries: list_entries로 얻은 항목 목록
-/// source_base: 원본 기준 경로
-/// target_base: 대상 기준 경로
-/// dry_run: true면 실제 복사하지 않고 시뮬레이션만 수행
-/// verbose: true면 복사 과정을 출력
+/// cli: 명령줄 인수 구조체
 pub fn copy_entries(
     entries: &[(PathBuf, EntryType, i32)],
     cli: &Cli,
 ) -> Result<()> {
-    for (path, entry_type, _depth) in entries {
+    for (path, entry_type, _) in entries {
 
         // 원본 경로에서 기준 경로를 제거하여 상대 경로 계산
         let relative_path = path.strip_prefix(&cli.source)
