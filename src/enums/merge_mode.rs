@@ -8,6 +8,8 @@ pub enum MergeMode {
     BIGGER,
     NEWER,
     DIFFERENT,
+    INTERVENTION,
+    SKIP
 }
 
 impl MergeMode {
@@ -18,6 +20,8 @@ impl MergeMode {
             MergeMode::BIGGER => "bigger",
             MergeMode::NEWER => "newer",
             MergeMode::DIFFERENT => "different",
+            MergeMode::INTERVENTION => "intervention",
+            MergeMode::SKIP => "skip",
         }
     }
 }

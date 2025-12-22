@@ -148,8 +148,6 @@ fn copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
                             println!("[F]: {} 건너뛰기 (파일 크기 동일)", path.display());
                         }
 
-                        todo!("파일 크기가 동일하지만, 내용이 다른 경우 처리 로직을 구현해야 합니다.");
-
                         Ok(())
                     }
                 },

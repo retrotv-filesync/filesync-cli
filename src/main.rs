@@ -33,9 +33,14 @@ struct Cli {
     sync_mode: SyncMode,
 
     // --merge-mode=<MERGE_MODE> or --merge-mode <MERGE_MODE>
-    // 병합 모드
+    /// 병합 모드
     #[arg(long, value_enum, value_name = "MERGE_MODE", default_value = "source")]
     merge_mode: MergeMode,
+
+    // --fallback=<FALLBACK_MERGE_MODE> or --fallback <FALLBACK_MERGE_MODE>
+    /// 병합 모드 적용 불가 시 대체 모드
+    #[arg(long, value_enum, value_name = "FALLBACK", default_value = "skip")]
+    fallback: MergeMode,
 
     // --dry-run or -d
     /// 동기화 시뮬레이션 실행
