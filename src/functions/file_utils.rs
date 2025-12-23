@@ -101,7 +101,7 @@ pub fn copy_entries(
 fn copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
     if target_path.exists() {
         // 대상 파일이 존재할 경우, 동일한 파일인지 확인
-        if is_same_file(path, target_path)? {
+        if is_same_file(path, target_path) {
             logging!(cli.verbose, "[F]: {} 건너뛰기 (파일 동일)", path.display());
 
             // 동일 파일이면 아무것도 하지 않고 성공 반환
@@ -159,6 +159,6 @@ fn overwrite_copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn is_same_file(path1: &Path, path2: &Path) -> Result<bool> {
-    Ok(File::new(path1).is_match(&File::new(path2)))
+fn is_same_file(path1: &Path, path2: &Path) -> bool {
+    File::new(path1).is_match(&File::new(path2))
 }

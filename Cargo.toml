@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 clap = { version = "4", features = ["derive"] }
 fs_extra = "1"
-retrotv-file = "0.0.4-alpha"
+retrotv-file = "0.0.5-alpha"
 
 [dev-dependencies]
 assert_cmd = "2"
