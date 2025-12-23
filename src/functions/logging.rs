@@ -1,3 +1,4 @@
+use crate::logging;
 use std::path::PathBuf;
 use crate::Cli;
 use crate::enums::entry_type::EntryType;
@@ -5,16 +6,17 @@ use crate::enums::entry_type::EntryType::D;
 
 // 입력 값 로깅
 pub fn input_logging(cli: &Cli) {
-    println!("원본 경로: {}", cli.source.display());
-    println!("대상 경로: {}", cli.target.display());
-    println!("동기화 모드: {}", cli.sync_mode);
-    println!("병합 모드: {}", cli.merge_mode);
-    println!("동기화 시뮬레이션 여부: {}", cli.dry_run);
+    logging!(cli.verbose, "원본 경로: {}", cli.source.display());
+    logging!(cli.verbose, "대상 경로: {}", cli.target.display());
+    logging!(cli.verbose, "동기화 모드: {}", cli.sync_mode);
+    logging!(cli.verbose, "병합 모드: {}", cli.merge_mode);
+    logging!(cli.verbose, "동기화 시뮬레이션 여부: {}", cli.dry_run);
 }
 
 // Directory 구조로 항목 로깅
-pub fn entry_logging(source_path: &PathBuf, entries: &Vec<(PathBuf, EntryType, i32)>) {
+pub fn entry_logging(cli: &Cli, entries: &Vec<(PathBuf, EntryType, i32)>) {
     let mut prefix_paths: Vec<String> = Vec::new();
+    let source_path = &cli.source;
 
     for i in 0..entries.len() {
         let entry = &entries[i];
@@ -46,6 +48,15 @@ pub fn entry_logging(source_path: &PathBuf, entries: &Vec<(PathBuf, EntryType, i
         };
         display_path = display_path.replace(&dir_path, "");
 
-        println!("{}[{}] {}", indent, entry.1.id(), display_path);
+        logging!(cli.verbose, "{}[{}] {}", indent, entry.1.id(), display_path);
     }
+}
+
+#[macro_export]
+macro_rules! logging {
+    ($is_verbose:expr, $($arg:tt)*) => {
+        if $is_verbose {
+            println!($($arg)*);
+        }
+    };
 }

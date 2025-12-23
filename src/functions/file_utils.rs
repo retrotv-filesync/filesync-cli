@@ -2,19 +2,20 @@ use std::fs::{metadata, read_dir, create_dir_all};
 use fs_extra::file::{copy as fse_copy, CopyOptions};
 use std::io::{Error, ErrorKind, Result};
 use std::path::{Path, PathBuf};
-use crate::Cli;
+use retrotv_file::file::File;
+use crate::{logging, Cli};
 use crate::enums::entry_type::EntryType;
 use crate::enums::entry_type::EntryType::{D, F};
 use crate::enums::merge_mode::MergeMode::{SOURCE, TARGET, BIGGER};
 
 /// 입력 경로가 디렉터리인지 확인합니다.
-pub fn is_directory<P: AsRef<Path>>(path: P) -> Result<bool> {
-    metadata(path).map(|md| md.is_dir())
+pub fn is_directory<P: AsRef<Path>>(path: P) -> bool {
+    File::new(path).is_directory()
 }
 
 /// 입력 경로가 파일인지 확인합니다.
-pub fn is_file<P: AsRef<Path>>(path: P) -> Result<bool> {
-    metadata(path).map(|md| md.is_file())
+pub fn is_file<P: AsRef<Path>>(path: P) -> bool {
+    File::new(path).is_file()
 }
 
 /// 입력 경로가 파일이면 그 파일만, 디렉터리이면 디렉터리 내 항목들을 반환합니다.
@@ -22,19 +23,19 @@ pub fn is_file<P: AsRef<Path>>(path: P) -> Result<bool> {
 pub fn list_entries<P: AsRef<Path>>(path: P, depth: i32) -> Result<Vec<(PathBuf, EntryType, i32)>> {
     let p = path.as_ref();
 
-    if is_file(p)? {
+    if is_file(p) {
         return Ok(vec![(p.to_path_buf(), F, depth)]);
     }
 
-    if is_directory(p)? {
+    if is_directory(p) {
         let mut items = Vec::new();
         for entry_res in read_dir(p)? {
             let entry = entry_res?;
-            if is_file(entry.path())? {
+            if is_file(entry.path()) {
 
                 // 파일인 경우, 항목에 추가
                 items.push((entry.path(), F, depth));
-            } else if is_directory(entry.path())? {
+            } else if is_directory(entry.path()) {
                 items.push((entry.path(), D, depth));
 
                 // 디렉터리인 경우, 재귀적으로 항목들을 추가
@@ -72,11 +73,9 @@ pub fn copy_entries(
         match entry_type {
             D => {
                 // 디렉토리 생성
-                if cli.verbose {
-                    let base_with_sep = format!("{}/", cli.target.display());
-                    let tp = target_path.display().to_string().replace(&base_with_sep, "");
-                    println!("[D]: {}", tp);
-                }
+                let base_with_sep = format!("{}/", cli.target.display());
+                let tp = target_path.display().to_string().replace(&base_with_sep, "");
+                logging!(cli.verbose, "[D]: {} 생성", tp);
 
                 if !cli.dry_run {
                     create_dir_all(&target_path)?;
@@ -103,27 +102,19 @@ fn copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
     if target_path.exists() {
         // 대상 파일이 존재할 경우, 동일한 파일인지 확인
         if is_same_file(path, target_path)? {
-            if cli.verbose {
-                println!("[F]: {} 건너뛰기 (파일 동일)", path.display());
-            }
+            logging!(cli.verbose, "[F]: {} 건너뛰기 (파일 동일)", path.display());
 
             // 동일 파일이면 아무것도 하지 않고 성공 반환
             Ok(())
         } else {
             match cli.merge_mode {
                 SOURCE => {
-                    if cli.verbose {
-                        println!("[F]: {} -> {} 원본 덮어쓰기", path.display(), target_path.display());
-                    }
-
+                    logging!(cli.verbose, "[F]: {} -> {} 원본 덮어쓰기", path.display(), target_path.display());
                     overwrite_copy(cli, path, target_path)
                 },
 
                 TARGET => {
-                    if cli.verbose {
-                        println!("[F]: {} <- {} 대상 덮어쓰기", path.display(), target_path.display());
-                    }
-
+                    logging!(cli.verbose, "[F]: {} <- {} 대상 덮어쓰기", path.display(), target_path.display());
                     overwrite_copy(cli, target_path, path)
                 },
 
@@ -132,22 +123,13 @@ fn copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
                     let target_meta = metadata(target_path)?;
 
                     if source_meta.len() > target_meta.len() {
-                        if cli.verbose {
-                            println!("[F]: {} -> {} 덮어쓰기 (원본이 더 큼)", path.display(), target_path.display());
-                        }
-
+                        logging!(cli.verbose, "[F]: {} -> {} 덮어쓰기 (원본이 더 큼)", path.display(), target_path.display());
                         overwrite_copy(cli, path, target_path)
                     } else if target_meta.len() > source_meta.len() {
-                        if cli.verbose {
-                            println!("[F]: {} <- {} 덮어쓰기 (대상이 더 큼)", path.display(), target_path.display());
-                        }
-
+                        logging!(cli.verbose, "[F]: {} <- {} 덮어쓰기 (대상이 더 큼)", path.display(), target_path.display());
                         overwrite_copy(cli, target_path, path)
                     } else {
-                        if cli.verbose {
-                            println!("[F]: {} 건너뛰기 (파일 크기 동일)", path.display());
-                        }
-
+                        logging!(cli.verbose, "[F]: {} 건너뛰기 (파일 크기 동일)", path.display());
                         Ok(())
                     }
                 },
@@ -159,10 +141,7 @@ fn copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
         }
     } else {
         // 대상 파일이 존재하지 않으면 새로 복사
-        if cli.verbose {
-            println!("[F]: {} -> {} 복사", path.display(), target_path.display());
-        }
-
+        logging!(cli.verbose, "[F]: {} -> {} 복사", path.display(), target_path.display());
         overwrite_copy(cli, path, target_path)
     }
 }
@@ -181,8 +160,5 @@ fn overwrite_copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
 }
 
 fn is_same_file(path1: &Path, path2: &Path) -> Result<bool> {
-    let meta1 = metadata(path1)?;
-    let meta2 = metadata(path2)?;
-
-    Ok(meta1.len() == meta2.len() && meta1.modified()? == meta2.modified()?)
+    Ok(File::new(path1).is_match(&File::new(path2)))
 }

@@ -70,33 +70,34 @@ fn main() {
         }
     }
 
-    // 입력 값 로깅
-    if cli.verbose {
-        input_logging(&cli);
+    if cli.dry_run {
+        cli.verbose = true;
+        println!("INFO: 동기화 시뮬레이션 모드가 활성화 되었습니다. verbose 옵션이 활성화 됩니다.")
     }
+
+    // 입력 값 로깅
+    input_logging(&cli);
 
     // 원본 경로의 목록 불러오기
     let fl = list_entries(&cli.source, 0).unwrap_or_else(|err| {
-        eprintln!("ERROR: 목록을 불러오는 중 오류 발생");
-        eprintln!("ERROR: {}", err);
+        eprintln!("[ERROR]: 목록을 불러오는 중 오류 발생");
+        eprintln!("[ERROR]: {}", err);
         std::process::exit(1);
     });
 
     // 불러온 목록 로깅
-    if cli.verbose {
-        entry_logging(&cli.source, &fl);
-    }
+    entry_logging(&cli, &fl);
 
     // 파일 및 디렉토리 복사
     copy_entries(&fl, &cli).unwrap_or_else(|err| {
-        eprintln!("ERROR: 파일 복사 중 오류 발생");
-        eprintln!("ERROR: {}", err);
+        eprintln!("[ERROR]: 파일 복사 중 오류 발생");
+        eprintln!("[ERROR]: {}", err);
         std::process::exit(1);
     });
 
     if cli.dry_run {
-        println!("시뮬레이션 완료 (실제로 복사되지 않음)");
+        logging!(cli.verbose, "시뮬레이션 완료 (실제로 복사되지 않음)");
     } else {
-        println!("파일 동기화 완료");
+        print!("파일 동기화 완료");
     }
 }

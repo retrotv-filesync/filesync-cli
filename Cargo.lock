@@ -494,9 +494,9 @@ checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
 
 [[package]]
 name = "retrotv-file"
-version = "0.0.3-alpha"
+version = "0.0.4-alpha"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13c072e185438ff19e365899bac08a13342b7da239da552d390fa40c8c6d84bd"
+checksum = "09711ae873b9e2e424073dadcdc5700df9687e02b9f4d38761112d445a8033c6"
 dependencies = [
  "sha2",
 ]
