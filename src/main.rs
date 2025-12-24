@@ -5,9 +5,10 @@ use enums::sync_mode::SyncMode;
 mod enums;
 mod functions;
 use functions::file_utils::{list_entries, copy_entries};
+use crate::enums::fallback_mode::FallbackMode;
 use crate::enums::merge_mode::MergeMode;
 use crate::enums::sync_mode::SyncMode::MIRRORING;
-use crate::enums::merge_mode::MergeMode::SOURCE;
+use crate::enums::merge_mode::MergeMode::{SOURCE};
 use crate::functions::logging::{entry_logging, input_logging};
 
 #[derive(Parser)]
@@ -37,10 +38,10 @@ struct Cli {
     #[arg(long, value_enum, value_name = "MERGE_MODE", default_value = "source")]
     merge_mode: MergeMode,
 
-    // --fallback=<FALLBACK_MERGE_MODE> or --fallback <FALLBACK_MERGE_MODE>
+    // --fallback=<FALLBACK_MODE> or --fallback <FALLBACK_MODE>
     /// 병합 모드 적용 불가 시 대체 모드
-    #[arg(long, value_enum, value_name = "FALLBACK", default_value = "skip")]
-    fallback: MergeMode,
+    #[arg(long, value_enum, value_name = "FALLBACK_MODE", default_value = "skip")]
+    fallback: FallbackMode,
 
     // --dry-run or -d
     /// 동기화 시뮬레이션 실행

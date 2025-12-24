@@ -6,7 +6,7 @@ use retrotv_file::file::File;
 use crate::{logging, Cli};
 use crate::enums::entry_type::EntryType;
 use crate::enums::entry_type::EntryType::{D, F};
-use crate::enums::merge_mode::MergeMode::{SOURCE, TARGET, BIGGER};
+use crate::enums::merge_mode::MergeMode::{SOURCE, TARGET, BIGGER, NEWER, DIFFERENT, INTERVENTION};
 
 /// 입력 경로가 디렉터리인지 확인합니다.
 pub fn is_directory<P: AsRef<Path>>(path: P) -> bool {
@@ -22,7 +22,6 @@ pub fn is_file<P: AsRef<Path>>(path: P) -> bool {
 /// 에러는 호출자에게 전파됩니다.
 pub fn list_entries<P: AsRef<Path>>(path: P, depth: i32) -> Result<Vec<(PathBuf, EntryType, i32)>> {
     let p = path.as_ref();
-
     if is_file(p) {
         return Ok(vec![(p.to_path_buf(), F, depth)]);
     }
@@ -49,7 +48,7 @@ pub fn list_entries<P: AsRef<Path>>(path: P, depth: i32) -> Result<Vec<(PathBuf,
 
     Err(
         Error::new(
-            ErrorKind::NotFound, "path is neither file nor directory"
+            ErrorKind::NotFound, "경로가 파일 혹은 디렉터리가 아닙니다."
         )
     )
 }
@@ -103,8 +102,6 @@ fn copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
         // 대상 파일이 존재할 경우, 동일한 파일인지 확인
         if is_same_file(path, target_path) {
             logging!(cli.verbose, "[F]: {} 건너뛰기 (파일 동일)", path.display());
-
-            // 동일 파일이면 아무것도 하지 않고 성공 반환
             Ok(())
         } else {
             match cli.merge_mode {
@@ -134,7 +131,15 @@ fn copy(cli: &Cli, path: &Path, target_path: &Path) -> Result<()> {
                     }
                 },
 
-                _ => {
+                NEWER => {
+                    todo!("이 병합 모드는 아직 구현되지 않았습니다: {:?}", cli.merge_mode);
+                },
+
+                DIFFERENT => {
+                    todo!("이 병합 모드는 아직 구현되지 않았습니다: {:?}", cli.merge_mode);
+                },
+
+                INTERVENTION => {
                     todo!("이 병합 모드는 아직 구현되지 않았습니다: {:?}", cli.merge_mode);
                 }
             }
