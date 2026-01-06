@@ -4,6 +4,8 @@ use enums::sync_mode::SyncMode;
 
 mod enums;
 mod functions;
+mod structs;
+
 use functions::file_utils::{list_entries, copy_entries};
 use crate::enums::fallback_mode::FallbackMode;
 use crate::enums::merge_mode::MergeMode;
